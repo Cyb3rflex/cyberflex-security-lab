@@ -1,0 +1,7 @@
+# Cyberflex Industries — Terms of Service & Acceptable Use
+Version: 4.2
+Last Revised: January 2026
+
+1. Authorized Access: All services and portals provided by Cyberflex Industries are for authorized enterprise users only.
+2. Confidentiality: Any telemetry and keys generated within the customer portal are subject to non-disclosure agreements.
+3. Support: Inquiries should be directed to support@cyberflex.local.

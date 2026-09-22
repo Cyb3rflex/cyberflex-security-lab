@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mission Workspace — Cyberflex Security Lab</title>
+  <link rel="stylesheet" href="/css/portal.css">
+  <link rel="stylesheet" href="/css/lab.css">
+</head>
+<body>
+
+  <!-- Top Lab Engagement Notice -->
+  <div class="top-notice-bar">
+    <div>🛡️ <strong>CYBERFLEX SECURITY LAB:</strong> Active Mission Workspace.</div>
+    <div><a href="/missions.html">← Back to Missions Hub</a></div>
+  </div>
+
+  <header class="navbar">
+    <a href="/missions.html" class="nav-brand">
+      <div class="brand-icon" style="background: linear-gradient(135deg, #0284c7, #0f172a);">SL</div>
+      <div class="brand-name">CYBERFLEX <span>LAB HUB</span></div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/missions.html">All Missions</a></li>
+      <li><a href="/defensive.html">Defensive Mode</a></li>
+      <li><a href="/" target="_blank">Target Portal ↗</a></li>
+    </ul>
+    <div class="nav-actions">
+      <span id="mission-status-pill" class="badge badge-primary">ACTIVE IN SCOPE</span>
+    </div>
+  </header>
+
+  <main class="container" id="workspace-container">
+    <!-- Breadcrumb & Header -->
+    <div class="page-header" style="margin-bottom: 24px;">
+      <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+        <span class="badge badge-neutral" id="mission-level-display">Level 1</span>
+        <span class="badge badge-success" id="mission-diff-display">Beginner</span>
+        <span style="font-size: 0.8125rem; color: var(--text-muted);" id="mission-time-display">30 minutes</span>
+        <span style="font-size: 0.8125rem; color: var(--primary); font-weight: 600;" id="mission-points-display">100 Points</span>
+      </div>
+      <h1 class="page-title" style="display: flex; align-items: baseline; gap: 12px;">
+        <span id="mission-code-display" style="color: var(--text-muted); font-size: 1.5rem;">M01</span>
+        <span id="mission-title-display">Loading Mission...</span>
+      </h1>
+      <p class="page-subtitle" id="mission-topic-display">Topic Loading...</p>
+    </div>
+
+    <!-- Completion Banner (Shown if mission is completed) -->
+    <div id="completion-banner" class="alert alert-success" style="display: none;">
+      <div>
+        <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 4px;">🎉 MISSION COMPLETED!</h3>
+        <p>Flag accepted and verified. You earned <strong id="awarded-points-val">100</strong> points for completing this security scenario.</p>
+      </div>
+    </div>
+
+    <!-- Main Workspace Grid -->
+    <div class="mission-workspace">
+      <!-- Left Column: Scenario, Target, Objectives, Rules -->
+      <div class="workspace-main">
+        <!-- Scenario Box -->
+        <div class="section-box">
+          <div class="section-title">
+            <span>📋</span> Scenario
+          </div>
+          <p id="scenario-text" style="color: var(--text-main); font-size: 0.9375rem; line-height: 1.6;">
+            Loading scenario description...
+          </p>
+        </div>
+
+        <!-- Target & Scope Box -->
+        <div class="section-box">
+          <div class="section-title">
+            <span>🎯</span> Target & Authorized Scope
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 0.875rem;">
+            <div>
+              <strong>Target Application:</strong><br>
+              <a id="target-endpoint-link" href="#" target="_blank" style="color: var(--primary); font-weight: 600; word-break: break-all;">
+                http://localhost:3000
+              </a>
+            </div>
+            <div>
+              <strong>Authorized Scope:</strong><br>
+              <span id="scope-text" style="color: var(--text-muted);">Only this local Cyberflex laboratory.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Objectives Checklist -->
+        <div class="section-box">
+          <div class="section-title">
+            <span>🎯</span> Mission Objectives
+          </div>
+          <p style="font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 14px;">
+            Work through each investigative stage. Mark off objectives as you discover evidence:
+          </p>
+          <ul id="objectives-list" class="objectives-list">
+            <!-- Populated by mission.js -->
+          </ul>
+        </div>
+
+        <!-- Rules Box -->
+        <div class="section-box" style="background-color: #f8fafc;">
+          <div class="section-title" style="font-size: 0.875rem; color: var(--text-muted);">
+            <span>⚠️</span> Rules of Engagement
+          </div>
+          <p id="rules-text" style="color: var(--text-muted); font-size: 0.8125rem;">
+            Do not attack systems outside this laboratory.
+          </p>
+        </div>
+      </div>
+
+      <!-- Right Column: Flag Submission & Progressive Hints -->
+      <div style="display: flex; flex-direction: column; gap: 24px;">
+        <!-- Flag Submission Card -->
+        <div class="flag-submission-card">
+          <h3>Flag Submission</h3>
+          <p>Flags use standard format: <code>CFX{unique_flag_here}</code></p>
+
+          <div id="flag-feedback" class="alert" style="display: none; margin-bottom: 14px;"></div>
+
+          <form onsubmit="handleFlagSubmit(event)">
+            <div class="flag-input-group">
+              <input type="text" id="flag-input" class="flag-input" placeholder="CFX{...}" required autocomplete="off" spellcheck="false">
+              <button type="submit" class="btn btn-primary">Submit Flag</button>
+            </div>
+          </form>
+          <div style="font-size: 0.75rem; color: #94a3b8;">
+            Submissions are audited locally and update your student rank.
+          </div>
+        </div>
+
+        <!-- Progressive Hints System -->
+        <div class="section-box">
+          <div class="section-title">
+            <span>💡</span> Progressive Hints System
+          </div>
+          <p style="font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 14px;">
+            Hints become progressively more explicit. Unlocking hints deducts points from your final score.
+          </p>
+          <div id="hints-container" class="hint-accordion">
+            <!-- Injected by mission.js -->
+          </div>
+        </div>
+
+        <!-- Navigation Shortcut -->
+        <div class="card" style="background-color: #f8fafc; text-align: center;">
+          <a href="/missions.html" class="btn btn-secondary btn-sm" style="width: 100%;">
+            ← Return to Missions Catalog
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer" style="margin-top: 60px;">
+    <div class="footer-bottom">
+      <div>&copy; 2026 Cyberflex Security Missions Lab.</div>
+      <div>Offline Training Instance</div>
+    </div>
+  </footer>
+
+  <script src="/js/mission.js"></script>
+</body>
+</html>

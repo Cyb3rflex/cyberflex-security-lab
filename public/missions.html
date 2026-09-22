@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Missions Command Center — Cyberflex Security Lab</title>
+  <link rel="stylesheet" href="/css/portal.css">
+  <link rel="stylesheet" href="/css/lab.css">
+</head>
+<body>
+
+  <!-- Top Lab Engagement Notice -->
+  <div class="top-notice-bar">
+    <div>🛡️ <strong>CYBERFLEX SECURITY LAB:</strong> Authorized Educational Environment.</div>
+    <div><a href="/">← Return to Public Corporate Portal</a></div>
+  </div>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <a href="/missions.html" class="nav-brand">
+      <div class="brand-icon" style="background: linear-gradient(135deg, #0284c7, #0f172a);">SL</div>
+      <div class="brand-name">CYBERFLEX <span>LAB HUB</span></div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/missions.html" class="active">Missions Hub</a></li>
+      <li><a href="/defensive.html">Defensive Mode</a></li>
+      <li><a href="/" target="_blank">Target Portal ↗</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="/defensive.html" class="btn btn-outline-primary btn-sm">Defensive Patch Lab</a>
+    </div>
+  </header>
+
+  <!-- Student Header & Performance Metrics Banner -->
+  <section class="lab-header-banner">
+    <div class="container">
+      <div class="lab-profile-grid">
+        <div class="student-identity">
+          <div class="student-avatar" id="avatar-initials">CF</div>
+          <div class="student-details">
+            <h2 id="student-name">Student Analyst</h2>
+            <div style="display: flex; gap: 8px; align-items: center; margin-top: 6px;">
+              <span class="rank-tag" id="student-rank">Security Apprentice</span>
+              <span style="font-size: 0.8125rem; color: #94a3b8;">Local Authorization Scope</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="lab-metrics">
+          <div class="metric-card">
+            <div class="metric-val" id="stat-points">0</div>
+            <div class="metric-lbl">Total Points</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-val" id="stat-flags">0</div>
+            <div class="metric-lbl">Flags Captured</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-val" id="stat-progress">0 / 21</div>
+            <div class="metric-lbl">Completed</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progression Bar -->
+      <div class="progress-container">
+        <div class="progress-header">
+          <span>Overall Progression</span>
+          <span id="progress-pct-label">0% Complete</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progress-bar" style="width: 0%;"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Missions Catalog Container -->
+  <main class="container" style="padding-top: 32px;">
+    <!-- Filter Tabs -->
+    <div class="mission-filter-tabs">
+      <button class="filter-tab active" onclick="setFilter('all', this)">All Missions (21)</button>
+      <button class="filter-tab" onclick="setFilter('1', this)">Level 1 — Security Apprentice (7)</button>
+      <button class="filter-tab" onclick="setFilter('2', this)">Level 2 — Security Analyst (7)</button>
+      <button class="filter-tab" onclick="setFilter('3', this)">Level 3 — Penetration Tester (6)</button>
+      <button class="filter-tab" onclick="setFilter('defensive', this)">Defensive Patching (1)</button>
+    </div>
+
+    <!-- Mission Cards Grid -->
+    <div id="mission-grid" class="mission-grid">
+      <!-- Injected by lab.js -->
+    </div>
+
+    <!-- Activity Log Terminal -->
+    <div style="margin-top: 48px;">
+      <h3 style="font-size: 1.125rem; font-weight: 700; color: var(--secondary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+        <span>📟</span> Recent Lab Activity & Audit Log
+      </h3>
+      <div id="activity-log-box" class="terminal-log-box">
+        <!-- Injected by lab.js -->
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer" style="margin-top: 60px;">
+    <div class="footer-bottom">
+      <div>&copy; 2026 Cyberflex Industries Educational Cybersecurity Laboratory.</div>
+      <div>Designed for authorized offline security training.</div>
+    </div>
+  </footer>
+
+  <script src="/js/lab.js"></script>
+</body>
+</html>

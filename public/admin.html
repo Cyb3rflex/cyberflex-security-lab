@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administrative Console & Diagnostics — Cyberflex Industries</title>
+  <link rel="stylesheet" href="/css/portal.css">
+  <link rel="stylesheet" href="/css/lab.css">
+</head>
+<body>
+
+  <div class="top-notice-bar">
+    <div>🛡️ <strong>CYBERFLEX SECURITY LAB:</strong> Active target environment.</div>
+    <div><a href="/missions.html">Open Missions Hub →</a></div>
+  </div>
+
+  <header class="navbar">
+    <a href="/" class="nav-brand">
+      <div class="brand-icon" style="background: linear-gradient(135deg, #0f172a, #334155);">AD</div>
+      <div class="brand-name">CYBERFLEX <span>ADMIN</span></div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/dashboard.html">Client Dashboard</a></li>
+      <li><a href="/admin.html" class="active">Admin Console</a></li>
+      <li><a href="/missions.html" style="color: #0284c7; font-weight: 700;">Security Lab Hub</a></li>
+    </ul>
+    <div class="nav-actions" id="nav-user-slot"></div>
+  </header>
+
+  <main class="container">
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+      <div>
+        <h1 class="page-title">Internal System Management Console</h1>
+        <p class="page-subtitle">Hardware telemetry monitoring, network diagnostic tools, and disaster recovery coordination.</p>
+      </div>
+      <div>
+        <span class="badge badge-danger">High Security Zone</span>
+      </div>
+    </div>
+
+    <!-- Alert for auth status -->
+    <div id="admin-auth-notice" class="alert alert-info" style="display: none;"></div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+      <!-- Network Diagnostics Tool (Sandboxed Command Injection: Mission 14) -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Hardware Telemetry Ping Tool</h2>
+          <span class="badge badge-warning">Diagnostics</span>
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 16px;">
+          Send ICMP diagnostic packets to edge gateways and mesh appliances.
+        </p>
+
+        <form id="ping-form">
+          <div class="form-group">
+            <label class="form-label" for="ping-target">Gateway Host / IP Address</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="ping-target" class="form-control" value="127.0.0.1" placeholder="e.g. 192.168.1.1 or gateway.local" required>
+              <button type="submit" class="btn btn-primary" style="white-space: nowrap;">Execute Ping</button>
+            </div>
+            <div class="form-hint">Host argument is passed to internal network diagnostic worker.</div>
+          </div>
+        </form>
+
+        <div style="margin-top: 16px;">
+          <label class="form-label">Diagnostic Console Output:</label>
+          <div id="ping-output" class="terminal-log-box" style="min-height: 140px; white-space: pre-wrap;">
+Ready for network diagnostics.
+          </div>
+        </div>
+      </div>
+
+      <!-- System Maintenance Dump (BFLA: Mission 17) & Disaster Recovery (Mission 20) -->
+      <div style="display: flex; flex-direction: column; gap: 24px;">
+        <!-- Maintenance Dump -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">System Configuration & Maintenance</h2>
+            <span class="badge badge-primary">Operations</span>
+          </div>
+          <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 16px;">
+            Trigger operational snapshot dump from backend system configuration registry.
+          </p>
+          <button onclick="triggerMaintenanceDump()" class="btn btn-secondary">
+            Execute Maintenance Snapshot Dump
+          </button>
+          <div id="maint-output" style="display: none; margin-top: 14px; font-size: 0.8125rem;"></div>
+        </div>
+
+        <!-- Disaster Recovery Tool (Mission 20) -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Disaster Recovery Coordinator</h2>
+            <span class="badge badge-danger">Capstone</span>
+          </div>
+          <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 16px;">
+            Coordinate cluster state restore via internal reverse-proxy headers (<code>X-Cyberflex-Internal</code>).
+          </p>
+          <button onclick="triggerDisasterRecovery()" class="btn btn-dark btn-sm">
+            Poll Master Recovery Endpoint
+          </button>
+          <div id="recovery-output" style="display: none; margin-top: 14px; font-size: 0.8125rem;"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/portal.js"></script>
+  <script>
+    document.getElementById('ping-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const target = document.getElementById('ping-target').value.trim();
+      const out = document.getElementById('ping-output');
+
+      out.textContent = `Pinging target: ${target}...\n`;
+
+      try {
+        const res = await fetch('/api/admin/diagnostics/ping', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ target })
+        });
+
+        const data = await res.json();
+        out.textContent = data.output || JSON.stringify(data, null, 2);
+      } catch (err) {
+        out.textContent = `Diagnostic execution failed: ${err.message}`;
+      }
+    });
+
+    async function triggerMaintenanceDump() {
+      const out = document.getElementById('maint-output');
+      try {
+        const res = await fetch('/api/admin/system-maintenance');
+        const data = await res.json();
+
+        if (data.success) {
+          out.className = 'alert alert-success';
+          let msg = `<strong>Maintenance snapshot retrieved!</strong> Executed by: <code>${escapeHtml(data.executedBy)}</code>`;
+          if (data.flag) {
+            msg += `<br><br><strong>BROKEN FUNCTION LEVEL AUTH FLAG:</strong> <code>${data.flag}</code>`;
+          }
+          out.innerHTML = msg;
+          out.style.display = 'block';
+        } else {
+          out.className = 'alert alert-danger';
+          out.textContent = data.error || 'Access denied.';
+          out.style.display = 'block';
+        }
+      } catch (err) {
+        out.className = 'alert alert-danger';
+        out.textContent = 'Server communication error.';
+        out.style.display = 'block';
+      }
+    }
+
+    async function triggerDisasterRecovery() {
+      const out = document.getElementById('recovery-output');
+      try {
+        const res = await fetch('/recovery/master-backup');
+        const data = await res.json();
+
+        if (data.success) {
+          out.className = 'alert alert-success';
+          out.innerHTML = `<strong>MASTER BACKUP ACCESSED!</strong><br>Flag: <code>${data.flag}</code>`;
+          out.style.display = 'block';
+        } else {
+          out.className = 'alert alert-warning';
+          out.innerHTML = `<strong>Proxy Verification Required:</strong> ${escapeHtml(data.error)}`;
+          out.style.display = 'block';
+        }
+      } catch (err) {
+        out.className = 'alert alert-danger';
+        out.textContent = 'Error connecting to recovery gateway.';
+        out.style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>

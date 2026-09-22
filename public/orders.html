@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Orders & Invoices — Cyberflex Industries Portal</title>
+  <link rel="stylesheet" href="/css/portal.css">
+  <link rel="stylesheet" href="/css/lab.css">
+</head>
+<body>
+
+  <div class="top-notice-bar">
+    <div>🛡️ <strong>CYBERFLEX SECURITY LAB:</strong> Active target environment.</div>
+    <div><a href="/missions.html">Open Missions Hub →</a></div>
+  </div>
+
+  <header class="navbar">
+    <a href="/" class="nav-brand">
+      <div class="brand-icon">CF</div>
+      <div class="brand-name">CYBERFLEX <span>INDUSTRIES</span></div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/dashboard.html">Dashboard</a></li>
+      <li><a href="/products.html">Products</a></li>
+      <li><a href="/orders.html" class="active">My Orders</a></li>
+      <li><a href="/profile.html">Profile</a></li>
+      <li><a href="/support.html">Support</a></li>
+      <li><a href="/missions.html" style="color: #0284c7; font-weight: 700;">Security Lab Hub</a></li>
+    </ul>
+    <div class="nav-actions" id="nav-user-slot"></div>
+  </header>
+
+  <main class="container">
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+      <div>
+        <h1 class="page-title">Procurement Orders & Invoices</h1>
+        <p class="page-subtitle">Inspect historical receipts, order tracking, and delivery manifests.</p>
+      </div>
+      <div>
+        <a href="/dashboard.html" class="btn btn-primary">+ Create New Order</a>
+      </div>
+    </div>
+
+    <!-- Direct Invoice Lookup (Demonstrating IDOR Mission 07) -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Direct Invoice Retrieval</h2>
+        <span class="badge badge-primary">IDOR Target</span>
+      </div>
+      <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 16px;">
+        Retrieve specific invoice records using their sequential corporate reference number.
+      </p>
+      <div style="display: flex; gap: 12px; max-width: 450px;">
+        <input type="number" id="direct-order-id" class="form-control" placeholder="Enter Order Reference (e.g. 1, 2, 3)" value="1">
+        <button onclick="fetchDirectOrder()" class="btn btn-secondary" style="white-space: nowrap;">View Invoice</button>
+      </div>
+    </div>
+
+    <!-- Invoice Modal / Display Card -->
+    <div id="invoice-display-card" class="card" style="display: none; border-left: 4px solid var(--primary);">
+      <!-- Rendered by JS -->
+    </div>
+
+    <!-- Orders Table -->
+    <div class="card">
+      <h2 class="card-title" style="margin-bottom: 16px;">Your Active Purchase History</h2>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Product / Description</th>
+              <th>Quantity</th>
+              <th>Total Billed</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="orders-table-body">
+            <!-- Loaded via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/portal.js"></script>
+  <script>
+    async function loadOrders() {
+      try {
+        const res = await fetch('/api/orders');
+        const data = await res.json();
+        const tbody = document.getElementById('orders-table-body');
+
+        if (!data.orders || data.orders.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No orders found.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.orders.map(o => `
+          <tr>
+            <td><strong>#${o.id}</strong></td>
+            <td>${escapeHtml(o.product_name)}</td>
+            <td>${o.quantity}</td>
+            <td>$${o.total_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+            <td><span class="badge badge-success">${escapeHtml(o.status)}</span></td>
+            <td>
+              <button onclick="viewOrder(${o.id})" class="btn btn-secondary btn-sm">Inspect Invoice</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error('Failed to load orders:', err);
+      }
+    }
+
+    async function viewOrder(id) {
+      document.getElementById('direct-order-id').value = id;
+      await fetchDirectOrder();
+    }
+
+    async function fetchDirectOrder() {
+      const id = document.getElementById('direct-order-id').value.trim();
+      const displayCard = document.getElementById('invoice-display-card');
+
+      if (!id) return;
+
+      try {
+        const res = await fetch(`/api/orders/${id}`);
+        const data = await res.json();
+
+        if (data.success && data.order) {
+          const o = data.order;
+          let flagHtml = '';
+          if (data.flag) {
+            flagHtml = `
+              <div class="alert alert-success" style="margin-top: 16px;">
+                <strong>CONFIDENTIAL CLEARANCE RECORD ACCESSED!</strong><br>
+                Security Flag Discovered: <code>${data.flag}</code>
+              </div>
+            `;
+          }
+
+          displayCard.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <h3 style="font-size: 1.125rem; font-weight: 700; color: var(--secondary);">Invoice Reference #${o.id}</h3>
+              <span class="badge badge-primary">${escapeHtml(o.status)}</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; font-size: 0.875rem;">
+              <div><strong>Client Account:</strong> ${escapeHtml(o.customer_name || 'Enterprise Client')}</div>
+              <div><strong>Email:</strong> ${escapeHtml(o.email || 'N/A')}</div>
+              <div><strong>Item:</strong> ${escapeHtml(o.product_name)}</div>
+              <div><strong>Amount:</strong> $${o.total_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+            </div>
+            <div style="background-color: var(--bg-subtle); padding: 12px 16px; border-radius: var(--radius-sm); font-size: 0.875rem;">
+              <strong>Invoice Notes / Clearance Manifest:</strong>
+              <div style="margin-top: 4px; font-family: var(--font-mono); color: var(--text-main);">${escapeHtml(o.invoice_notes)}</div>
+            </div>
+            ${flagHtml}
+          `;
+          displayCard.style.display = 'block';
+        } else {
+          displayCard.className = 'card alert alert-danger';
+          displayCard.textContent = data.error || 'Invoice record not found.';
+          displayCard.style.display = 'block';
+        }
+      } catch (err) {
+        displayCard.className = 'card alert alert-danger';
+        displayCard.textContent = 'Server communication error.';
+        displayCard.style.display = 'block';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadOrders);
+  </script>
+</body>
+</html>

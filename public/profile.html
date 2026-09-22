@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Profile & Settings — Cyberflex Industries Portal</title>
+  <link rel="stylesheet" href="/css/portal.css">
+  <link rel="stylesheet" href="/css/lab.css">
+</head>
+<body>
+
+  <div class="top-notice-bar">
+    <div>🛡️ <strong>CYBERFLEX SECURITY LAB:</strong> Active target environment.</div>
+    <div><a href="/missions.html">Open Missions Hub →</a></div>
+  </div>
+
+  <header class="navbar">
+    <a href="/" class="nav-brand">
+      <div class="brand-icon">CF</div>
+      <div class="brand-name">CYBERFLEX <span>INDUSTRIES</span></div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/dashboard.html">Dashboard</a></li>
+      <li><a href="/products.html">Products</a></li>
+      <li><a href="/orders.html">My Orders</a></li>
+      <li><a href="/profile.html" class="active">Profile</a></li>
+      <li><a href="/upload.html">Uploads</a></li>
+      <li><a href="/support.html">Support</a></li>
+      <li><a href="/missions.html" style="color: #0284c7; font-weight: 700;">Security Lab Hub</a></li>
+    </ul>
+    <div class="nav-actions" id="nav-user-slot"></div>
+  </header>
+
+  <main class="container" style="max-width: 860px;">
+    <div class="page-header">
+      <h1 class="page-title">Client Account Settings</h1>
+      <p class="page-subtitle">Manage your personal details, corporate email, and API preferences.</p>
+    </div>
+
+    <div id="profile-alert" class="alert" style="display: none;"></div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+      <!-- Profile Information & Mass Assignment Target (Mission 16) -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Corporate Profile (API v2)</h2>
+          <span class="badge badge-primary">REST v2</span>
+        </div>
+
+        <form id="profile-v2-form">
+          <div class="form-group">
+            <label class="form-label" for="prof-fullname">Full Name</label>
+            <input type="text" id="prof-fullname" class="form-control">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="prof-username">Username</label>
+            <input type="text" id="prof-username" class="form-control" readonly style="background-color: var(--bg-subtle);">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="prof-role">Account Privilege Level</label>
+            <input type="text" id="prof-role" class="form-control" readonly style="background-color: var(--bg-subtle);">
+            <div class="form-hint">Role privileges are restricted by administrative policy.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="prof-bio">Public Bio / Notes</label>
+            <textarea id="prof-bio" class="form-control" placeholder="Enter department notes..."></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Save Profile via API v2</button>
+        </form>
+      </div>
+
+      <!-- Email Update Form (Mission 13: CSRF Target) -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Primary Contact Email</h2>
+          <span class="badge badge-warning">State Change</span>
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 20px;">
+          Update the primary corporate email destination for invoices and password recovery notifications.
+        </p>
+
+        <form id="email-form" action="/api/user/update-email" method="POST">
+          <div class="form-group">
+            <label class="form-label" for="prof-email">Corporate Email Address</label>
+            <input type="email" id="prof-email" name="email" class="form-control" required>
+            <div class="form-hint">Notice: Form submits directly without anti-CSRF token verification.</div>
+          </div>
+
+          <button type="submit" class="btn btn-secondary">Update Email Address</button>
+        </form>
+
+        <div style="margin-top: 32px; border-top: 1px solid var(--border-color); padding-top: 16px;">
+          <h3 style="font-size: 0.9375rem; font-weight: 600; color: var(--secondary); margin-bottom: 8px;">CSRF Simulation Proof of Concept</h3>
+          <p style="font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 12px;">
+            Test simulated cross-site request forgery execution against this endpoint:
+          </p>
+          <button type="button" onclick="testCsrfSimulation()" class="btn btn-outline-primary btn-sm">
+            Execute Simulated CSRF Attack
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/portal.js"></script>
+  <script>
+    async function loadProfile() {
+      try {
+        const res = await fetch('/api/user/profile');
+        const data = await res.json();
+        if (data.success && data.profile) {
+          const p = data.profile;
+          document.getElementById('prof-fullname').value = p.full_name || '';
+          document.getElementById('prof-username').value = p.username || '';
+          document.getElementById('prof-role').value = p.role || 'customer';
+          document.getElementById('prof-email').value = p.email || '';
+          document.getElementById('prof-bio').value = p.bio || '';
+        }
+      } catch (e) {
+        console.error('Failed to load profile:', e);
+      }
+    }
+
+    // Handle v2 API Profile Save (Mass assignment test)
+    document.getElementById('profile-v2-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const alertBox = document.getElementById('profile-alert');
+      alertBox.style.display = 'none';
+
+      const payload = {
+        full_name: document.getElementById('prof-fullname').value.trim(),
+        bio: document.getElementById('prof-bio').value.trim()
+      };
+
+      try {
+        const res = await fetch('/api/v2/users/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          alertBox.className = 'alert alert-success';
+          let msg = 'Profile updated successfully via v2 API.';
+          if (data.flag) {
+            msg += `<br><strong>MASS ASSIGNMENT FLAG DISCOVERED:</strong> <code>${data.flag}</code>`;
+          }
+          alertBox.innerHTML = msg;
+          alertBox.style.display = 'block';
+          loadProfile();
+        } else {
+          alertBox.className = 'alert alert-danger';
+          alertBox.textContent = data.error || 'Failed to update profile.';
+          alertBox.style.display = 'block';
+        }
+      } catch (err) {
+        alertBox.className = 'alert alert-danger';
+        alertBox.textContent = 'Server error.';
+        alertBox.style.display = 'block';
+      }
+    });
+
+    // Handle standard email form
+    document.getElementById('email-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('prof-email').value.trim();
+      const alertBox = document.getElementById('profile-alert');
+      alertBox.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/user/update-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alertBox.className = 'alert alert-success';
+          let msg = data.message;
+          if (data.flag) {
+            msg += `<br><strong>FLAG DISCOVERED:</strong> <code>${data.flag}</code>`;
+          }
+          alertBox.innerHTML = msg;
+          alertBox.style.display = 'block';
+        }
+      } catch (err) {
+        alertBox.className = 'alert alert-danger';
+        alertBox.textContent = 'Failed to update email.';
+        alertBox.style.display = 'block';
+      }
+    });
+
+    async function testCsrfSimulation() {
+      const alertBox = document.getElementById('profile-alert');
+      alertBox.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/user/update-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: 'csrf_exploited@attacker.local' })
+        });
+        const data = await res.json();
+        alertBox.className = 'alert alert-warning';
+        alertBox.innerHTML = `
+          <strong>CSRF Attack Simulated Successfully!</strong>
+          <br>State-changing email update executed without origin/CSRF validation.
+          <br><strong>FLAG:</strong> <code>${data.flag}</code>
+        `;
+        alertBox.style.display = 'block';
+        loadProfile();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadProfile);
+  </script>
+</body>
+</html>
