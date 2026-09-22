@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document & Avatar Upload Portal — Cyberflex Industries</title>
+  <link rel="stylesheet" href="/css/portal.css">
+  <link rel="stylesheet" href="/css/lab.css">
+</head>
+<body>
+
+  <div class="top-notice-bar">
+    <div>🛡️ <strong>CYBERFLEX SECURITY LAB:</strong> Active target environment.</div>
+    <div><a href="/missions.html">Open Missions Hub →</a></div>
+  </div>
+
+  <header class="navbar">
+    <a href="/" class="nav-brand">
+      <div class="brand-icon">CF</div>
+      <div class="brand-name">CYBERFLEX <span>INDUSTRIES</span></div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/dashboard.html">Dashboard</a></li>
+      <li><a href="/products.html">Products</a></li>
+      <li><a href="/orders.html">My Orders</a></li>
+      <li><a href="/profile.html">Profile</a></li>
+      <li><a href="/upload.html" class="active">Uploads</a></li>
+      <li><a href="/support.html">Support</a></li>
+      <li><a href="/missions.html" style="color: #0284c7; font-weight: 700;">Security Lab Hub</a></li>
+    </ul>
+    <div class="nav-actions" id="nav-user-slot"></div>
+  </header>
+
+  <main class="container" style="max-width: 760px;">
+    <div class="page-header">
+      <h1 class="page-title">Enterprise Compliance & Attachment Upload</h1>
+      <p class="page-subtitle">Submit network topologies, security accreditations, or custom corporate avatars.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Attachment Gateway</h2>
+        <span class="badge badge-primary">Direct Gateway</span>
+      </div>
+
+      <div id="upload-feedback" class="alert" style="display: none;"></div>
+
+      <form id="upload-form" enctype="multipart/form-data">
+        <div class="form-group">
+          <label class="form-label" for="file-input">Select Document or Avatar Image</label>
+          <input type="file" id="file-input" name="avatar" class="form-control" required>
+          <div class="form-hint">Accepted file types: standard compliance documents and images. Maximum size: 5MB.</div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Transmit File to Storage Cluster</button>
+      </form>
+    </div>
+
+    <!-- Uploaded Files Log -->
+    <div class="card">
+      <h2 class="card-title" style="margin-bottom: 14px;">Recent Transmissions</h2>
+      <div id="uploaded-files-list">
+        <p style="color: var(--text-muted); font-size: 0.875rem;">No files uploaded in this active browser session yet.</p>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/portal.js"></script>
+  <script>
+    document.getElementById('upload-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fileInput = document.getElementById('file-input');
+      const feedback = document.getElementById('upload-feedback');
+      const list = document.getElementById('uploaded-files-list');
+
+      if (!fileInput.files || fileInput.files.length === 0) return;
+
+      const formData = new FormData();
+      formData.append('avatar', fileInput.files[0]);
+
+      feedback.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/upload/avatar', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          feedback.className = 'alert alert-success';
+          let msg = `File uploaded successfully: <code>${escapeHtml(data.filename)}</code><br><a href="${data.path}" target="_blank" style="color: #065f46; font-weight: 600;">Click to view uploaded file</a>`;
+          if (data.flag) {
+            msg += `<br><br><strong>UNTRUSTED UPLOAD FLAG DISCOVERED:</strong> <code>${data.flag}</code>`;
+          }
+          feedback.innerHTML = msg;
+          feedback.style.display = 'block';
+
+          list.innerHTML = `
+            <div style="border: 1px solid var(--border-color); padding: 12px; border-radius: var(--radius-sm); font-size: 0.875rem;">
+              <strong>${escapeHtml(data.originalName)}</strong> → <a href="${data.path}" target="_blank">${escapeHtml(data.path)}</a>
+            </div>
+          `;
+        } else {
+          feedback.className = 'alert alert-danger';
+          feedback.textContent = data.error || 'Upload failed.';
+          feedback.style.display = 'block';
+        }
+      } catch (err) {
+        feedback.className = 'alert alert-danger';
+        feedback.textContent = 'Server communication error.';
+        feedback.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>

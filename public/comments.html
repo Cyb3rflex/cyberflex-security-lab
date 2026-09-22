@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Feedback & Community Reviews — Cyberflex Industries</title>
+  <link rel="stylesheet" href="/css/portal.css">
+  <link rel="stylesheet" href="/css/lab.css">
+</head>
+<body>
+
+  <div class="top-notice-bar">
+    <div>🛡️ <strong>CYBERFLEX SECURITY LAB:</strong> Active target environment.</div>
+    <div><a href="/missions.html">Open Missions Hub →</a></div>
+  </div>
+
+  <header class="navbar">
+    <a href="/" class="nav-brand">
+      <div class="brand-icon">CF</div>
+      <div class="brand-name">CYBERFLEX <span>INDUSTRIES</span></div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/dashboard.html">Dashboard</a></li>
+      <li><a href="/products.html">Products</a></li>
+      <li><a href="/comments.html" class="active">Community Reviews</a></li>
+      <li><a href="/support.html">Support</a></li>
+      <li><a href="/missions.html" style="color: #0284c7; font-weight: 700;">Security Lab Hub</a></li>
+    </ul>
+    <div class="nav-actions" id="nav-user-slot"></div>
+  </header>
+
+  <main class="container" style="max-width: 900px;">
+    <div class="page-header">
+      <h1 class="page-title">Enterprise Community Reviews</h1>
+      <p class="page-subtitle">Verified feedback from SecOps and network engineering teams deploying Cyberflex platforms.</p>
+    </div>
+
+    <!-- Post Comment Box (Stored XSS Target: Mission 05) -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Submit Customer Experience Review</h2>
+        <span class="badge badge-warning">Stored Content</span>
+      </div>
+
+      <div id="comment-feedback" class="alert" style="display: none;"></div>
+
+      <form id="comment-form">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label" for="comment-author">Author / Call-sign</label>
+            <input type="text" id="comment-author" class="form-control" placeholder="e.g. Lead_SecOps_Analyst" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="comment-rating">Rating</label>
+            <select id="comment-rating" class="form-control">
+              <option value="5">★★★★★ (5/5) Exceptional</option>
+              <option value="4">★★★★☆ (4/5) Very Good</option>
+              <option value="3">★★★☆☆ (3/5) Average</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="comment-content">Review Description</label>
+          <textarea id="comment-content" class="form-control" placeholder="Enter your review..." required></textarea>
+          <div class="form-hint">HTML formatting is parsed in the community feedback thread.</div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Publish Review</button>
+      </form>
+    </div>
+
+    <!-- Comments List -->
+    <div class="card">
+      <h2 class="card-title" style="margin-bottom: 20px;">Recent Community Feedback</h2>
+      <div id="comments-container" style="display: flex; flex-direction: column; gap: 16px;">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/portal.js"></script>
+  <script>
+    async function loadComments() {
+      try {
+        const res = await fetch('/api/comments');
+        const data = await res.json();
+        const container = document.getElementById('comments-container');
+
+        if (!data.comments || data.comments.length === 0) {
+          container.innerHTML = '<div style="color: var(--text-muted);">No reviews posted yet.</div>';
+          return;
+        }
+
+        // Intentionally rendering unescaped HTML content (Demonstrating Stored XSS Mission 05)
+        container.innerHTML = data.comments.map(c => `
+          <div style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 16px; background-color: #fff;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-weight: 700; color: var(--secondary);">${escapeHtml(c.author)}</span>
+              <span style="color: #f59e0b; font-size: 0.875rem;">${'★'.repeat(c.rating)}${'☆'.repeat(5 - c.rating)}</span>
+            </div>
+            <!-- Raw comment content rendered directly into DOM -->
+            <div class="comment-body" style="color: var(--text-main); font-size: 0.9375rem; line-height: 1.5;">
+              ${c.content}
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error('Failed to load comments:', err);
+      }
+    }
+
+    document.getElementById('comment-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const author = document.getElementById('comment-author').value.trim();
+      const rating = parseInt(document.getElementById('comment-rating').value, 10);
+      const content = document.getElementById('comment-content').value;
+      const feedback = document.getElementById('comment-feedback');
+
+      feedback.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/comments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ author, rating, content })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          feedback.className = 'alert alert-success';
+          let msg = data.adminReviewNote || data.message;
+          if (data.flag) {
+            msg += `<br><strong>STORED XSS FLAG DISCOVERED:</strong> <code>${data.flag}</code>`;
+          }
+          feedback.innerHTML = msg;
+          feedback.style.display = 'block';
+
+          document.getElementById('comment-content').value = '';
+          loadComments();
+        } else {
+          feedback.className = 'alert alert-danger';
+          feedback.textContent = data.error || 'Failed to post comment.';
+          feedback.style.display = 'block';
+        }
+      } catch (err) {
+        feedback.className = 'alert alert-danger';
+        feedback.textContent = 'Server communication error.';
+        feedback.style.display = 'block';
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', loadComments);
+  </script>
+</body>
+</html>

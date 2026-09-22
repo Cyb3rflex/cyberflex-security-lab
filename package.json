@@ -1,0 +1,28 @@
+{
+  "name": "cyberflex-security-lab",
+  "version": "1.0.0",
+  "description": "Cyberflex Security Missions Lab - Educational Cybersecurity Training Platform",
+  "main": "server/server.js",
+  "scripts": {
+    "setup": "node scripts/setup.js",
+    "reset": "node scripts/reset.js",
+    "start": "node api.js && node server/server.js",
+    "dev": "node api.js && node --watch server/server.js",
+    "test": "node test/verify-missions.js"
+  },
+  "keywords": [
+    "cybersecurity",
+    "training",
+    "pentest",
+    "education",
+    "vulnerable-lab"
+  ],
+  "author": "Cyberflex Educational Security Team",
+  "license": "MIT",
+  "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1"
+  }
+}

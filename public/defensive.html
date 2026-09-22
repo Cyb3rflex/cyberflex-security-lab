@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Defensive Mode: Patch The Application — Cyberflex Security Lab</title>
+  <link rel="stylesheet" href="/css/portal.css">
+  <link rel="stylesheet" href="/css/lab.css">
+</head>
+<body>
+
+  <div class="top-notice-bar">
+    <div>🛡️ <strong>CYBERFLEX DEFENSIVE LAB:</strong> Code Review, Remediation & Fix Verification.</div>
+    <div><a href="/missions.html">← Return to Missions Hub</a></div>
+  </div>
+
+  <header class="navbar">
+    <a href="/missions.html" class="nav-brand">
+      <div class="brand-icon" style="background: linear-gradient(135deg, #10b981, #047857);">DF</div>
+      <div class="brand-name">CYBERFLEX <span>DEFENSIVE LAB</span></div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/missions.html">All Missions</a></li>
+      <li><a href="/defensive.html" class="active">Defensive Mode</a></li>
+      <li><a href="/" target="_blank">Target Portal ↗</a></li>
+    </ul>
+    <div class="nav-actions">
+      <span class="badge badge-success">Mission 21 Active</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="page-header">
+      <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+        <span class="badge badge-success">Defensive Engineering</span>
+        <span class="badge badge-primary">Mission 21</span>
+        <span style="font-size: 0.8125rem; color: var(--text-muted);">150 Points</span>
+      </div>
+      <h1 class="page-title">Defensive Mode — Patch The Application</h1>
+      <p class="page-subtitle">
+        Security isn't just about finding vulnerabilities; it's about eliminating them through robust code remediation.
+      </p>
+    </div>
+
+    <!-- Verification Result Banner -->
+    <div id="verify-alert" class="alert" style="display: none;"></div>
+
+    <!-- Methodology Box -->
+    <div class="card" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #fff; border: none;">
+      <h2 style="font-size: 1.125rem; font-weight: 700; color: #38bdf8; margin-bottom: 8px;">The Security Engineering Lifecycle</h2>
+      <p style="font-size: 0.9375rem; color: #cbd5e1; line-height: 1.6;">
+        Follow the professional remediation workflow:
+        <strong>RECON → DISCOVER → EXPLOIT → UNDERSTAND → PATCH → VERIFY</strong>.
+        Review the vulnerable versus secure implementation below, activate the runtime security patch, and test that the exploit vector is neutralized.
+      </p>
+    </div>
+
+    <!-- Patch 1: SQL Injection Remediation -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">Exercise 1: SQL Injection Remediation (Mission 03)</h2>
+          <span style="font-size: 0.8125rem; color: var(--text-muted);">Target: <code>server/vulnerabilities/vulnerabilityEngine.js -> searchProducts()</code></span>
+        </div>
+        <div>
+          <button id="btn-toggle-03" onclick="togglePatch('03')" class="btn btn-secondary btn-sm">Enable SQLi Patch</button>
+        </div>
+      </div>
+
+      <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 16px;">
+        <strong>Root Cause:</strong> The application concatenated raw untrusted user input directly into SQL queries.
+        <strong>Remediation:</strong> Replace dynamic concatenation with parameterized queries, separating SQL code from user data.
+      </p>
+
+      <div class="diff-container">
+        <div>
+          <div style="font-size: 0.8125rem; font-weight: 700; color: var(--danger); margin-bottom: 6px;">❌ VULNERABLE CODE (String Concatenation)</div>
+          <pre class="code-box vulnerable"><code>// VULNERABLE: Direct string interpolation
+const query = req.query.q;
+const sql = `SELECT id, name, category, price
+             FROM products
+             WHERE name LIKE '%${query}%'
+             AND is_confidential = 0`;
+
+return db.rawQuery(sql);</code></pre>
+        </div>
+
+        <div>
+          <div style="font-size: 0.8125rem; font-weight: 700; color: var(--success); margin-bottom: 6px;">✓ SECURE REMEDIATION (Parameterized Prepared Statement)</div>
+          <pre class="code-box patched"><code>// SECURE: Parameterized prepared query
+const query = req.query.q;
+const sql = `SELECT id, name, category, price
+             FROM products
+             WHERE (name LIKE ? OR category LIKE ?)
+             AND is_confidential = 0`;
+
+const param = `%${query}%`;
+return db.all(sql, [param, param]);</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Patch 2: Path Traversal Remediation -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">Exercise 2: Path Traversal Remediation (Mission 10)</h2>
+          <span style="font-size: 0.8125rem; color: var(--text-muted);">Target: <code>server/vulnerabilities/vulnerabilityEngine.js -> readDocument()</code></span>
+        </div>
+        <div>
+          <button id="btn-toggle-10" onclick="togglePatch('10')" class="btn btn-secondary btn-sm">Enable Traversal Patch</button>
+        </div>
+      </div>
+
+      <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 16px;">
+        <strong>Root Cause:</strong> <code>path.join()</code> allowed relative dot-dot-slash (<code>../</code>) sequences to climb outside the documents folder.
+        <strong>Remediation:</strong> Strip directory components with <code>path.basename()</code> or verify that the resolved canonical path starts with the base directory.
+      </p>
+
+      <div class="diff-container">
+        <div>
+          <div style="font-size: 0.8125rem; font-weight: 700; color: var(--danger); margin-bottom: 6px;">❌ VULNERABLE CODE (Unchecked Relative Path)</div>
+          <pre class="code-box vulnerable"><code>// VULNERABLE: Direct path joining allows ../ traversal
+const baseDir = '/app/public/documents';
+const targetPath = path.join(baseDir, req.query.file);
+
+return fs.readFileSync(targetPath, 'utf8');</code></pre>
+        </div>
+
+        <div>
+          <div style="font-size: 0.8125rem; font-weight: 700; color: var(--success); margin-bottom: 6px;">✓ SECURE REMEDIATION (Canonical Path Boundary Verification)</div>
+          <pre class="code-box patched"><code>// SECURE: Strict canonical path resolution verification
+const baseDir = '/app/public/documents';
+const safeName = path.basename(req.query.file);
+const targetPath = path.resolve(baseDir, safeName);
+
+if (!targetPath.startsWith(baseDir)) {
+  throw new Error('Access Denied: Path traversal detected.');
+}
+return fs.readFileSync(targetPath, 'utf8');</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Patch Verification Action -->
+    <div class="card" style="text-align: center; padding: 36px 24px;">
+      <h2 class="card-title" style="margin-bottom: 8px;">Run Automated Security Patch Verification</h2>
+      <p style="color: var(--text-muted); font-size: 0.9375rem; margin-bottom: 20px; max-width: 600px; margin-left: auto; margin-right: auto;">
+        Trigger automated exploit validation tests against your running application instance to verify that the attack surface is protected.
+      </p>
+      <button onclick="runVerificationTest()" class="btn btn-primary" style="padding: 12px 28px; font-size: 1rem;">
+        ⚡ Execute Automated Patch Verification Test
+      </button>
+    </div>
+  </main>
+
+  <footer class="footer" style="margin-top: 60px;">
+    <div class="footer-bottom">
+      <div>&copy; 2026 Cyberflex Industries Educational Security Missions Lab.</div>
+      <div>Authorized Local Training Target</div>
+    </div>
+  </footer>
+
+  <script>
+    let patch03Active = false;
+    let patch10Active = false;
+
+    async function togglePatch(missionId) {
+      const isCurrentlyActive = (missionId === '03' ? patch03Active : patch10Active);
+      const newStatus = !isCurrentlyActive;
+
+      try {
+        const res = await fetch('/api/lab/defensive/toggle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ missionId, patchStatus: newStatus })
+        });
+        const data = await res.json();
+
+        if (missionId === '03') {
+          patch03Active = data.isPatched;
+          updateButtonUI('03', patch03Active);
+        } else {
+          patch10Active = data.isPatched;
+          updateButtonUI('10', patch10Active);
+        }
+      } catch (err) {
+        console.error('Failed to toggle patch:', err);
+      }
+    }
+
+    function updateButtonUI(id, active) {
+      const btn = document.getElementById(`btn-toggle-${id}`);
+      if (active) {
+        btn.className = 'btn btn-primary btn-sm';
+        btn.textContent = '✓ Patch Active (Protected)';
+      } else {
+        btn.className = 'btn btn-secondary btn-sm';
+        btn.textContent = 'Enable Security Patch';
+      }
+    }
+
+    async function runVerificationTest() {
+      const alertBox = document.getElementById('verify-alert');
+      alertBox.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/lab/defensive/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        const data = await res.json();
+
+        if (data.success && data.verified) {
+          alertBox.className = 'alert alert-success';
+          alertBox.innerHTML = `
+            <div>
+              <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 4px;">🛡️ DEFENSIVE SECURITY VERIFICATION PASSED!</h3>
+              <p>${escapeHtml(data.message)}</p>
+              <div style="margin-top: 8px;">
+                <strong>DEFENSIVE MASTER FLAG:</strong> <code>${data.flag}</code>
+              </div>
+            </div>
+          `;
+          alertBox.style.display = 'block';
+        } else {
+          alertBox.className = 'alert alert-danger';
+          alertBox.textContent = data.error || 'Verification failed. Make sure at least one patch is active.';
+          alertBox.style.display = 'block';
+        }
+      } catch (err) {
+        alertBox.className = 'alert alert-danger';
+        alertBox.textContent = 'Server communication error running patch verification.';
+        alertBox.style.display = 'block';
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+  </script>
+</body>
+</html>

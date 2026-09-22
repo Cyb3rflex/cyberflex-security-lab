@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Dashboard — Cyberflex Industries Portal</title>
+  <link rel="stylesheet" href="/css/portal.css">
+  <link rel="stylesheet" href="/css/lab.css">
+</head>
+<body>
+
+  <!-- Top Lab Banner -->
+  <div class="top-notice-bar">
+    <div>🛡️ <strong>CYBERFLEX SECURITY LAB:</strong> Active target environment.</div>
+    <div><a href="/missions.html">Open Missions Hub →</a></div>
+  </div>
+
+  <header class="navbar">
+    <a href="/" class="nav-brand">
+      <div class="brand-icon">CF</div>
+      <div class="brand-name">CYBERFLEX <span>INDUSTRIES</span></div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/dashboard.html" class="active">Dashboard</a></li>
+      <li><a href="/products.html">Products</a></li>
+      <li><a href="/orders.html">My Orders</a></li>
+      <li><a href="/profile.html">Profile</a></li>
+      <li><a href="/upload.html">Uploads</a></li>
+      <li><a href="/support.html">Support</a></li>
+      <li><a href="/missions.html" style="color: #0284c7; font-weight: 700;">Security Lab Hub</a></li>
+    </ul>
+    <div class="nav-actions" id="nav-user-slot">
+      <!-- Injected by portal.js -->
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px;">
+      <div>
+        <h1 class="page-title">Enterprise Customer Dashboard</h1>
+        <p class="page-subtitle">Welcome back, <span id="dash-user-name">Client Account</span>. Manage your infrastructure and orders.</p>
+      </div>
+      <div>
+        <a href="/products.html" class="btn btn-primary">+ Order New Equipment</a>
+      </div>
+    </div>
+
+    <!-- Overview Stats -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 32px;">
+      <div class="card" style="margin-bottom: 0;">
+        <div style="font-size: 0.8125rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Account Balance</div>
+        <div style="font-size: 1.875rem; font-weight: 700; color: var(--primary); margin: 6px 0;" id="user-balance">$1,500.00</div>
+        <div style="font-size: 0.8125rem; color: var(--success);">● Active Credit Line Available</div>
+      </div>
+
+      <div class="card" style="margin-bottom: 0;">
+        <div style="font-size: 0.8125rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Active Hardware Sensors</div>
+        <div style="font-size: 1.875rem; font-weight: 700; color: var(--secondary); margin: 6px 0;">4 Nodes</div>
+        <div style="font-size: 0.8125rem; color: var(--text-muted);">US-East Regional Mesh</div>
+      </div>
+
+      <div class="card" style="margin-bottom: 0;">
+        <div style="font-size: 0.8125rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Open Support Cases</div>
+        <div style="font-size: 1.875rem; font-weight: 700; color: var(--secondary); margin: 6px 0;">0 Pending</div>
+        <div style="font-size: 0.8125rem; color: var(--text-muted);">SLA Status: 100% Up</div>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+      <!-- Quick Order / Purchase Card (Mission 08 Parameter Manipulation Target) -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Direct Procurement Request</h2>
+          <span class="badge badge-primary">Express Ordering</span>
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 20px;">
+          Submit purchase orders for Cyberflex hardware and licenses directly from your authorized credit balance.
+        </p>
+
+        <div id="order-feedback" class="alert" style="display: none;"></div>
+
+        <form id="quick-order-form">
+          <div class="form-group">
+            <label class="form-label" for="order-product">Select Equipment</label>
+            <select id="order-product" class="form-control" onchange="updateSelectedProductPrice()">
+              <option value="1" data-price="299.00">Cyberflex Sentry Endpoint Defense — $299.00</option>
+              <option value="2" data-price="850.00">Cyberflex Quantum Gateway v3 — $850.00</option>
+              <option value="4" data-price="5000.00">Cyberflex Hardware Security Module (HSM-9000) — $5,000.00</option>
+              <option value="5" data-price="450.00">Cyberflex Network Tap Sensor — $450.00</option>
+            </select>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+              <label class="form-label" for="order-qty">Quantity</label>
+              <input type="number" id="order-qty" class="form-control" value="1" min="1">
+            </div>
+
+            <!-- Client-side editable unit price (Intentionally exposed for Mission 08 parameter tampering) -->
+            <div class="form-group">
+              <label class="form-label" for="order-price">Unit Price ($USD)</label>
+              <input type="number" id="order-price" class="form-control" value="299.00" step="0.01">
+              <div class="form-hint">Client checkout rate calculated from catalog.</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="order-coupon">Promotional Voucher / Corporate Code</label>
+            <input type="text" id="order-coupon" class="form-control" placeholder="Enter coupon or promo code (Optional)">
+          </div>
+
+          <button type="submit" class="btn btn-primary">Authorize & Submit Purchase Order</button>
+        </form>
+      </div>
+
+      <!-- Quick Links & System Shortcuts -->
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        <div class="card">
+          <h3 class="card-title" style="margin-bottom: 14px;">Quick Actions</h3>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <a href="/orders.html" class="btn btn-secondary" style="justify-content: flex-start;">📄 View Invoices & Receipts</a>
+            <a href="/profile.html" class="btn btn-secondary" style="justify-content: flex-start;">👤 Update Account Profile</a>
+            <a href="/upload.html" class="btn btn-secondary" style="justify-content: flex-start;">📤 Upload Compliance Documents</a>
+            <a href="/admin.html" id="admin-portal-link" class="btn btn-dark" style="justify-content: flex-start;">⚙️ Staff Administrative Console</a>
+          </div>
+        </div>
+
+        <div class="card" style="background-color: #f8fafc;">
+          <h3 class="card-title" style="font-size: 0.9375rem; color: var(--secondary); margin-bottom: 8px;">Security Lab Guidance</h3>
+          <p style="font-size: 0.8125rem; color: var(--text-muted); line-height: 1.5;">
+            Notice how forms interact with backend REST APIs. Inspect browser requests in the Network tab to understand parameter flow.
+          </p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/portal.js"></script>
+  <script>
+    function updateSelectedProductPrice() {
+      const select = document.getElementById('order-product');
+      const selected = select.options[select.selectedIndex];
+      const price = selected.getAttribute('data-price');
+      document.getElementById('order-price').value = price;
+    }
+
+    async function loadDashboard() {
+      try {
+        const res = await fetch('/api/user/profile');
+        const data = await res.json();
+        if (data.success && data.profile) {
+          document.getElementById('dash-user-name').textContent = data.profile.full_name || data.profile.username;
+          document.getElementById('user-balance').textContent = `$${Number(data.profile.balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    document.getElementById('quick-order-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const productId = parseInt(document.getElementById('order-product').value, 10);
+      const quantity = parseInt(document.getElementById('order-qty').value, 10);
+      const customPrice = parseFloat(document.getElementById('order-price').value);
+      const couponCode = document.getElementById('order-coupon').value.trim();
+      const feedback = document.getElementById('order-feedback');
+
+      feedback.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId, quantity, customPrice, couponCode })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          feedback.className = 'alert alert-success';
+          let msg = `Order #${data.orderId} processed! Total billed: $${data.totalPrice.toFixed(2)}.`;
+          if (data.flag) {
+            msg += `<br><strong>SECURITY FLAG UNLOCKED:</strong> <code>${data.flag}</code>`;
+          }
+          feedback.innerHTML = msg;
+          feedback.style.display = 'block';
+        } else {
+          feedback.className = 'alert alert-danger';
+          feedback.textContent = data.error || 'Failed to place order.';
+          feedback.style.display = 'block';
+        }
+      } catch (err) {
+        feedback.className = 'alert alert-danger';
+        feedback.textContent = 'Server communication error.';
+        feedback.style.display = 'block';
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', loadDashboard);
+  </script>
+</body>
+</html>

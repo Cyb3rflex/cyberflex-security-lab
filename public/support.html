@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Technical Support — Cyberflex Industries</title>
+  <link rel="stylesheet" href="/css/portal.css">
+  <link rel="stylesheet" href="/css/lab.css">
+</head>
+<body>
+
+  <div class="top-notice-bar">
+    <div>🛡️ <strong>CYBERFLEX SECURITY LAB:</strong> Active target environment.</div>
+    <div><a href="/missions.html">Open Missions Hub →</a></div>
+  </div>
+
+  <header class="navbar">
+    <a href="/" class="nav-brand">
+      <div class="brand-icon">CF</div>
+      <div class="brand-name">CYBERFLEX <span>INDUSTRIES</span></div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/dashboard.html">Dashboard</a></li>
+      <li><a href="/products.html">Products</a></li>
+      <li><a href="/support.html" class="active">Support</a></li>
+      <li><a href="/comments.html">Community</a></li>
+      <li><a href="/missions.html" style="color: #0284c7; font-weight: 700;">Security Lab Hub</a></li>
+    </ul>
+    <div class="nav-actions" id="nav-user-slot"></div>
+  </header>
+
+  <main class="container">
+    <div class="page-header">
+      <h1 class="page-title">Technical Support & Knowledge Base</h1>
+      <p class="page-subtitle">Search technical troubleshooting articles, download user guides, and track support tickets.</p>
+    </div>
+
+    <!-- Knowledge Base Search (Reflected XSS Target: Mission 04) -->
+    <div class="card" style="margin-bottom: 28px;">
+      <h2 class="card-title" style="margin-bottom: 12px;">Search Technical Knowledge Base</h2>
+      <form id="kb-search-form" onsubmit="handleKbSearch(event)">
+        <div style="display: flex; gap: 12px;">
+          <input type="text" id="kb-search-input" class="form-control" placeholder="Search knowledge base articles (e.g. Sentry, Gateway, TLS)...">
+          <button type="submit" class="btn btn-primary" style="white-space: nowrap;">Search Helpdesk</button>
+        </div>
+      </form>
+
+      <!-- Reflected Query Banner (Intentionally unescaped for Reflected XSS demonstration) -->
+      <div id="reflected-query-container" style="display: none; margin-top: 16px;"></div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+      <!-- Document Repository & Path Traversal (Mission 10) -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Technical Documentation Repository</h2>
+          <span class="badge badge-primary">Filesystem</span>
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 16px;">
+          Download system manuals and regulatory documentation.
+        </p>
+
+        <ul style="list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+          <li>
+            <a href="/api/documents/view?file=terms-of-service.txt" target="_blank" style="color: var(--primary); font-weight: 500; text-decoration: none;">
+              📄 terms-of-service.txt
+            </a>
+            <span style="color: var(--text-muted); font-size: 0.8125rem;">(Acceptable Use Policy)</span>
+          </li>
+        </ul>
+
+        <div style="border-top: 1px solid var(--border-color); padding-top: 14px;">
+          <label class="form-label" for="doc-fetch-name">Custom Document Query:</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="doc-fetch-name" class="form-control" value="terms-of-service.txt" placeholder="Enter filename">
+            <button type="button" onclick="fetchDocument()" class="btn btn-secondary btn-sm" style="white-space: nowrap;">View Document</button>
+          </div>
+          <div id="doc-output" style="display: none; margin-top: 12px; background-color: var(--bg-subtle); padding: 12px; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 0.8125rem; white-space: pre-wrap; max-height: 200px; overflow-y: auto;"></div>
+        </div>
+      </div>
+
+      <!-- Ticket Attachment Lookup (Mission 18: Full Scope Assessment) -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Helpdesk Attachment Lookup</h2>
+          <span class="badge badge-warning">Ticket Portal</span>
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 16px;">
+          Inspect attachments associated with open or closed customer support tickets.
+        </p>
+
+        <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+          <input type="number" id="ticket-id-input" class="form-control" placeholder="Ticket ID (e.g. 1)" value="1">
+          <button type="button" onclick="fetchTicketAttachments()" class="btn btn-secondary btn-sm" style="white-space: nowrap;">Fetch Ticket</button>
+        </div>
+
+        <div id="ticket-attachment-results" style="display: none; font-size: 0.875rem;"></div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/portal.js"></script>
+  <script>
+    async function handleKbSearch(e) {
+      if (e) e.preventDefault();
+      const term = document.getElementById('kb-search-input').value;
+      const banner = document.getElementById('reflected-query-container');
+
+      try {
+        const res = await fetch(`/api/support/search?term=${encodeURIComponent(term)}`);
+        const data = await res.json();
+
+        // Intentionally rendering unescaped reflection to demonstrate Reflected XSS (Mission 04)
+        banner.className = 'alert alert-info';
+        let html = `Search results for: <strong>${data.query}</strong>`;
+        if (data.flag) {
+          html += `<br><br><strong>REFLECTED XSS FLAG DISCOVERED:</strong> <code>${data.flag}</code>`;
+        }
+        banner.innerHTML = html;
+        banner.style.display = 'block';
+
+        // Execute script tags if present in reflected query simulation
+        if (data.hasPayloadTrigger) {
+          console.log('[XSS Simulator] Script tag executed in client context.');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function fetchDocument() {
+      const fileName = document.getElementById('doc-fetch-name').value.trim();
+      const docBox = document.getElementById('doc-output');
+
+      try {
+        const res = await fetch(`/api/documents/view?file=${encodeURIComponent(fileName)}`);
+        const text = await res.text();
+        docBox.textContent = text;
+        docBox.style.display = 'block';
+      } catch (err) {
+        docBox.textContent = 'Failed to load document.';
+        docBox.style.display = 'block';
+      }
+    }
+
+    async function fetchTicketAttachments() {
+      const ticketId = document.getElementById('ticket-id-input').value.trim();
+      const resBox = document.getElementById('ticket-attachment-results');
+
+      try {
+        const res = await fetch(`/api/support/tickets/${ticketId}/attachments`);
+        const data = await res.json();
+
+        if (data.success && data.attachments) {
+          resBox.innerHTML = `
+            <div style="background-color: #f8fafc; border: 1px solid var(--border-color); padding: 12px; border-radius: var(--radius-sm);">
+              <strong>Subject:</strong> ${escapeHtml(data.subject || 'Ticket Details')}<br>
+              <strong>Attachments (${data.attachments.length}):</strong>
+              <ul style="margin-top: 8px; padding-left: 20px;">
+                ${data.attachments.map(a => `
+                  <li>
+                    ${escapeHtml(a.filename)} (${escapeHtml(a.size || '')})
+                    ${a.flag ? `<br><span class="badge badge-success" style="margin-top: 4px;">FLAG: ${a.flag}</span>` : ''}
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+          `;
+          resBox.style.display = 'block';
+        } else {
+          resBox.innerHTML = `<div class="alert alert-danger">${escapeHtml(data.error || 'Ticket not found')}</div>`;
+          resBox.style.display = 'block';
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // Auto check if URL has ?term=
+    document.addEventListener('DOMContentLoaded', () => {
+      const p = new URLSearchParams(window.location.search);
+      if (p.has('term')) {
+        document.getElementById('kb-search-input').value = p.get('term');
+        handleKbSearch();
+      }
+    });
+  </script>
+</body>
+</html>

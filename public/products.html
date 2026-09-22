@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enterprise Security Solutions Catalog — Cyberflex Industries</title>
+  <link rel="stylesheet" href="/css/portal.css">
+  <link rel="stylesheet" href="/css/lab.css">
+</head>
+<body>
+
+  <div class="top-notice-bar">
+    <div>🛡️ <strong>CYBERFLEX SECURITY LAB:</strong> Active target environment.</div>
+    <div><a href="/missions.html">Open Missions Hub →</a></div>
+  </div>
+
+  <header class="navbar">
+    <a href="/" class="nav-brand">
+      <div class="brand-icon">CF</div>
+      <div class="brand-name">CYBERFLEX <span>INDUSTRIES</span></div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/dashboard.html">Dashboard</a></li>
+      <li><a href="/products.html" class="active">Products</a></li>
+      <li><a href="/orders.html">My Orders</a></li>
+      <li><a href="/profile.html">Profile</a></li>
+      <li><a href="/support.html">Support</a></li>
+      <li><a href="/missions.html" style="color: #0284c7; font-weight: 700;">Security Lab Hub</a></li>
+    </ul>
+    <div class="nav-actions" id="nav-user-slot"></div>
+  </header>
+
+  <main class="container">
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+      <div>
+        <h1 class="page-title">Enterprise Product & Hardware Catalog</h1>
+        <p class="page-subtitle">Field-grade cryptographic enclaves, network sensors, and endpoint defense suites.</p>
+      </div>
+      <div>
+        <span class="badge badge-success">Inventory Live</span>
+      </div>
+    </div>
+
+    <!-- Product Search Box (Mission 03: SQLi Target) -->
+    <div class="card" style="margin-bottom: 32px;">
+      <form id="product-search-form" onsubmit="handleProductSearch(event)">
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <input type="text" id="product-search-input" class="form-control" placeholder="Search products by model, name, or keyword (e.g., Sentry, Gateway, HSM)...">
+          <button type="submit" class="btn btn-primary" style="white-space: nowrap;">Search Catalog</button>
+          <button type="button" onclick="loadAllProducts()" class="btn btn-secondary" style="white-space: nowrap;">Reset</button>
+        </div>
+        <div class="form-hint" style="margin-top: 8px;">
+          Product queries are matched across enterprise inventory models.
+        </div>
+      </form>
+    </div>
+
+    <!-- SQL Injection Execution Banner (visible if error or raw SQL occurs) -->
+    <div id="sql-debug-banner" style="display: none; margin-bottom: 24px;"></div>
+
+    <!-- Product Grid -->
+    <div id="products-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;">
+      <!-- Populated via JS -->
+    </div>
+  </main>
+
+  <script src="/js/portal.js"></script>
+  <script>
+    async function loadAllProducts() {
+      document.getElementById('product-search-input').value = '';
+      document.getElementById('sql-debug-banner').style.display = 'none';
+
+      try {
+        const res = await fetch('/api/products');
+        const data = await res.json();
+        renderProducts(data.products || []);
+      } catch (err) {
+        console.error('Failed to load products:', err);
+      }
+    }
+
+    async function handleProductSearch(e) {
+      if (e) e.preventDefault();
+      const q = document.getElementById('product-search-input').value.trim();
+      const debugBanner = document.getElementById('sql-debug-banner');
+
+      try {
+        const res = await fetch(`/api/products/search?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+
+        if (data.error) {
+          debugBanner.className = 'alert alert-danger';
+          debugBanner.innerHTML = `<strong>Backend Query Error:</strong> <code>${escapeHtml(data.error)}</code>`;
+          debugBanner.style.display = 'block';
+          renderProducts([]);
+          return;
+        }
+
+        if (data.sql && !data.patched) {
+          debugBanner.className = 'alert alert-warning';
+          debugBanner.innerHTML = `<strong>Executed Backend Query:</strong> <code style="word-break: break-all;">${escapeHtml(data.sql)}</code>`;
+          debugBanner.style.display = 'block';
+        } else {
+          debugBanner.style.display = 'none';
+        }
+
+        renderProducts(data.results || []);
+      } catch (err) {
+        console.error('Search error:', err);
+      }
+    }
+
+    function renderProducts(list) {
+      const container = document.getElementById('products-grid');
+      if (!list || list.length === 0) {
+        container.innerHTML = '<div class="alert alert-info" style="grid-column: 1/-1;">No products found matching query.</div>';
+        return;
+      }
+
+      container.innerHTML = list.map(p => `
+        <div class="card" style="display: flex; flex-direction: column; margin-bottom: 0;">
+          <div class="card-header" style="margin-bottom: 12px; padding-bottom: 8px;">
+            <span class="badge badge-primary">${escapeHtml(p.category || 'Hardware')}</span>
+            <span style="font-weight: 700; color: var(--primary); font-size: 1.125rem;">
+              ${typeof p.price === 'number' ? '$' + p.price.toLocaleString('en-US', { minimumFractionDigits: 2 }) : escapeHtml(p.price)}
+            </span>
+          </div>
+          <h3 class="card-title" style="margin-bottom: 8px;">${escapeHtml(p.name)}</h3>
+          <p style="color: var(--text-muted); font-size: 0.875rem; flex-grow: 1; margin-bottom: 16px;">
+            ${escapeHtml(p.description || 'No datasheet description available.')}
+          </p>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 12px;">
+            <span style="font-size: 0.75rem; color: var(--text-light);">Stock: ${p.stock !== undefined ? p.stock : 'N/A'} units</span>
+            <a href="/dashboard.html" class="btn btn-primary btn-sm">Order Unit</a>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    document.addEventListener('DOMContentLoaded', loadAllProducts);
+  </script>
+</body>
+</html>

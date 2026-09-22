@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — Cyberflex Industries Portal</title>
+  <link rel="stylesheet" href="/css/portal.css">
+  <link rel="stylesheet" href="/css/lab.css">
+</head>
+<body>
+
+  <header class="navbar">
+    <a href="/" class="nav-brand">
+      <div class="brand-icon">CF</div>
+      <div class="brand-name">CYBERFLEX <span>INDUSTRIES</span></div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/">Overview</a></li>
+      <li><a href="/products.html">Enterprise Solutions</a></li>
+      <li><a href="/missions.html" style="color: #0284c7; font-weight: 700;">Security Lab Hub</a></li>
+    </ul>
+    <div class="nav-actions" id="nav-user-slot">
+      <a href="/register.html" class="btn btn-primary btn-sm">Register</a>
+    </div>
+  </header>
+
+  <main class="container" style="max-width: 480px; margin-top: 40px;">
+    <div class="card" style="box-shadow: var(--shadow-md);">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <h1 style="font-size: 1.5rem; font-weight: 700; color: var(--secondary);">Client & Staff Portal</h1>
+        <p style="color: var(--text-muted); font-size: 0.875rem;">Sign in to access your Cyberflex infrastructure dashboard</p>
+      </div>
+
+      <div id="login-alert" class="alert" style="display: none;"></div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label class="form-label" for="username">Username</label>
+          <input type="text" id="username" class="form-control" placeholder="e.g. john.doe or admin" required autocomplete="username">
+          <div class="form-hint">Staff accounts use standard corporate identifiers.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <input type="password" id="password" class="form-control" placeholder="Enter your password" required autocomplete="current-password">
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">Sign In to Portal</button>
+      </form>
+
+      <div style="margin-top: 24px; text-align: center; border-top: 1px solid var(--border-color); padding-top: 16px; font-size: 0.875rem; color: var(--text-muted);">
+        Don't have an account? <a href="/register.html" style="color: var(--primary); font-weight: 600;">Register here</a>
+        <br><br>
+        <span style="font-size: 0.8125rem;">Authorized Security Analyst Note: Standard corporate demo account is <code>john.doe</code> / <code>password123</code>.</span>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/portal.js"></script>
+  <script>
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const alertBox = document.getElementById('login-alert');
+
+      alertBox.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          alertBox.className = 'alert alert-success';
+          let msg = `Login successful! Redirecting...`;
+          if (data.flag) {
+            msg += `<br><strong>FLAG DISCOVERED:</strong> <code>${data.flag}</code>`;
+          }
+          alertBox.innerHTML = msg;
+          alertBox.style.display = 'block';
+
+          setTimeout(() => {
+            if (data.user.role === 'admin') {
+              window.location.href = '/admin.html';
+            } else {
+              window.location.href = '/dashboard.html';
+            }
+          }, 1200);
+        } else {
+          alertBox.className = 'alert alert-danger';
+          alertBox.textContent = data.error || 'Login failed.';
+          alertBox.style.display = 'block';
+        }
+      } catch (err) {
+        alertBox.className = 'alert alert-danger';
+        alertBox.textContent = 'Server communication error.';
+        alertBox.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>
